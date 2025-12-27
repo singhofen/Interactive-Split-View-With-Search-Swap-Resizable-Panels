@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Split View</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: black;
+            color: white;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        nav {
+            width: 100%;
+            background: #0b0b0b;
+            backdrop-filter: blur(15px);
+            padding: 15px 25px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            border-bottom: 1px solid #333;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        button {
+            padding: 8px 18px;
+            border: none;
+            background: #333;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #111;
+        }
+        
+        .wrapper {
+            display: flex;
+            height: 100vh;
+            position: relative;
+            margin-top: 60px;
+        }
+        
+        .panel {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            background: #101010bb;
+            backdrop-filter: blur(25px);
+            min-width: 100px;
+            overflow: hidden;
+        }
+        
+        .tabbar {
+            background: #1a1a1acc;
+            border-bottom: 1px solid #333;
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        
+        .tab {
+            padding: 8px 14px;
+            background: #222;
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .tab.active {
+            background: #333;
+        }
+        
+        .search-bar {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            margin: 0 10px 10px 10px;
+            padding: 8px;
+            border-radius: 6px;
+            border: none;
+            width: calc(100% - 20px);
+            background: #222;
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .scroll-content {
+            overflow-y: auto;
+            padding: 0 20px 80px 20px;
+            flex: 1;
+        }
+        
+        .scroll-content h2 {
+            margin-top: 20px;
+        }
+        
+        .scroll-content p {
+            margin-bottom: 16px;
+            line-height: 1.6;
+        }
+        
+        .book {
+            margin-bottom: 30px;
+        }
+        
+        .divider {
+            width: 6px;
+            cursor: col-resize;
+            background: #444;
+            z-index: 10;
+        }
+        
+        footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            background: #0b0b0b;
+            padding: 12px;
+            border-top: 1px solid #333;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <h2>Bible Split View</h2>
+        <button id="swapBtn">Swap Panels</button>
+    </nav>
+
+    <div class="wrapper" id="wrapper">
+
+        <!-- LEFT PANEL -->
+        <div class="panel left" id="leftPanel">
+            <div class="tabbar">
+                <div class="tab active">Old Testament</div>
+            </div>
+            <input type="text" class="search-bar" id="searchOld" placeholder="Search Old Testament...">
+            <div class="scroll-content" id="oldContent"></div>
+        </div>
+
+        <!-- Divider -->
+        <div class="divider" id="divider"></div>
+
+        <!-- RIGHT PANEL -->
+        <div class="panel right" id="rightPanel">
+            <div class="tabbar">
+                <div class="tab active">New Testament</div>
+            </div>
+            <input type="text" class="search-bar" id="searchNew" placeholder="Search New Testament...">
+            <div class="scroll-content" id="newContent"></div>
+        </div>
+
+    </div>
+
+    <footer>
+        Scroll independently • Divider draggable • Unlimited swaps
+    </footer>
+
+    <script>
+        // ===============================
+        // Old Testament (39 books)
+        const oldTestament = [{
+            book: "Genesis",
+            summary: ["Creation, fall, flood, patriarchs, covenant with Abraham, Joseph’s story."]
+        }, {
+            book: "Exodus",
+            summary: ["Israel’s deliverance from Egypt, Sinai covenant, Ten Commandments, tabernacle instructions."]
+        }, {
+            book: "Leviticus",
+            summary: ["Laws of holiness, sacrifices, priestly duties, ritual purity, moral guidance."]
+        }, {
+            book: "Numbers",
+            summary: ["Wilderness journey, censuses, rebellion, God’s provision, tribal organization."]
+        }, {
+            book: "Deuteronomy",
+            summary: ["Moses’ farewell speeches, covenant reminders, blessings and curses, obedience to God."]
+        }, {
+            book: "Joshua",
+            summary: ["Conquest of Canaan, division of land, covenant renewal, faithfulness required."]
+        }, {
+            book: "Judges",
+            summary: ["Cycles of sin and deliverance, leadership of judges, Israel’s moral decline."]
+        }, {
+            book: "Ruth",
+            summary: ["Faithfulness, loyalty, God’s providence, lineage of David."]
+        }, {
+            book: "1 Samuel",
+            summary: ["Samuel, Saul’s kingship, David’s rise, God’s guidance, obedience vs rebellion."]
+        }, {
+            book: "2 Samuel",
+            summary: ["David’s reign, victories, sins, covenant with God, kingdom consolidation."]
+        }, {
+            book: "1 Kings",
+            summary: ["Solomon’s reign, temple built, wisdom, divided kingdom, kings’ failures."]
+        }, {
+            book: "2 Kings",
+            summary: ["History of Israel and Judah, prophets, exile, faithfulness consequences."]
+        }, {
+            book: "1 Chronicles",
+            summary: ["Genealogies, David’s reign, temple preparations, worship instructions."]
+        }, {
+            book: "2 Chronicles",
+            summary: ["Solomon’s reign, temple dedication, kings of Judah, exile warnings."]
+        }, {
+            book: "Ezra",
+            summary: ["Return from exile, rebuilding temple, restoring worship, covenant renewal."]
+        }, {
+            book: "Nehemiah",
+            summary: ["Rebuilding Jerusalem walls, reforms, social and religious restoration."]
+        }, {
+            book: "Esther",
+            summary: ["Providence, courage, deliverance of Jews in Persia, God’s protection."]
+        }, {
+            book: "Job",
+            summary: ["Suffering, faith, dialogue on God’s justice, perseverance."]
+        }, {
+            book: "Psalms",
+            summary: ["Prayers, hymns, worship, lament, praise, expressions of faith."]
+        }, {
+            book: "Proverbs",
+            summary: ["Wisdom sayings, moral guidance, practical life instructions."]
+        }, {
+            book: "Ecclesiastes",
+            summary: ["Life’s meaning, vanity, fear of God, purpose in human endeavors."]
+        }, {
+            book: "Song of Solomon",
+            summary: ["Love poetry, beauty, intimacy, allegory of God’s love."]
+        }, {
+            book: "Isaiah",
+            summary: ["Prophecies of judgment and salvation, Messiah promises, God’s sovereignty."]
+        }, {
+            book: "Jeremiah",
+            summary: ["Warnings to Judah, call to repentance, suffering prophet, hope for restoration."]
+        }, {
+            book: "Lamentations",
+            summary: ["Mourning Jerusalem’s destruction, God’s judgment, mercy in suffering."]
+        }, {
+            book: "Ezekiel",
+            summary: ["Prophecies during exile, visions, restoration, God’s glory."]
+        }, {
+            book: "Daniel",
+            summary: ["Faithfulness in exile, visions of God’s kingdom, prophecy of nations."]
+        }, {
+            book: "Hosea",
+            summary: ["God’s love vs Israel’s unfaithfulness, call to repentance."]
+        }, {
+            book: "Joel",
+            summary: ["Day of the Lord, repentance, outpouring of God’s Spirit."]
+        }, {
+            book: "Amos",
+            summary: ["Social justice, God’s judgment, call for righteousness."]
+        }, {
+            book: "Obadiah",
+            summary: ["Judgment of Edom, God’s sovereignty, restoration of Israel."]
+        }, {
+            book: "Jonah",
+            summary: ["God’s mercy, prophet’s reluctance, Nineveh’s repentance."]
+        }, {
+            book: "Micah",
+            summary: ["Judgment, hope, Messiah prophecy, justice and mercy."]
+        }, {
+            book: "Nahum",
+            summary: ["Judgment on Nineveh, God’s justice and power."]
+        }, {
+            book: "Habakkuk",
+            summary: ["Questioning God’s justice, faith, and trust in divine plan."]
+        }, {
+            book: "Zephaniah",
+            summary: ["Day of the Lord, judgment, call to humility and seek God."]
+        }, {
+            book: "Haggai",
+            summary: ["Encouragement to rebuild temple, obedience, God’s blessing."]
+        }, {
+            book: "Zechariah",
+            summary: ["Prophecies of restoration, Messiah, encouragement for God’s people."]
+        }, {
+            book: "Malachi",
+            summary: ["Call to faithfulness, warnings, promise of coming Messiah."]
+        }];
+
+        // ===============================
+        // New Testament (27 books)
+        const newTestament = [{
+            book: "Matthew",
+            summary: ["Jesus as Messiah, teachings, miracles, kingdom of heaven, Great Commission."]
+        }, {
+            book: "Mark",
+            summary: ["Concise ministry of Jesus, suffering servant, miracles, discipleship."]
+        }, {
+            book: "Luke",
+            summary: ["Jesus’ compassion, inclusivity, parables, prayer, salvation for all."]
+        }, {
+            book: "John",
+            summary: ["Jesus’ divinity, signs, love, eternal life, abiding in Christ."]
+        }, {
+            book: "Acts",
+            summary: ["Early church, Holy Spirit, missionary journeys, spreading the Gospel."]
+        }, {
+            book: "Romans",
+            summary: ["Salvation by faith, sin, grace, justification, Christian living."]
+        }, {
+            book: "1 Corinthians",
+            summary: ["Church divisions, love, spiritual gifts, resurrection, Christian conduct."]
+        }, {
+            book: "2 Corinthians",
+            summary: ["Paul’s ministry defense, comfort, generosity, strength in weakness."]
+        }, {
+            book: "Galatians",
+            summary: ["Freedom from law, justification by faith, fruit of the Spirit."]
+        }, {
+            book: "Ephesians",
+            summary: ["Church as body of Christ, unity, blessings, spiritual growth, relationships."]
+        }, {
+            book: "Philippians",
+            summary: ["Joy, humility, unity, contentment, living worthy of the gospel."]
+        }, {
+            book: "Colossians",
+            summary: ["Christ’s supremacy, warnings against false teaching, holy living."]
+        }, {
+            book: "1 Thessalonians",
+            summary: ["Encouragement, Christ’s return, holy living, hope."]
+        }, {
+            book: "2 Thessalonians",
+            summary: ["Clarifying end times, faithfulness, avoiding idleness."]
+        }, {
+            book: "1 Timothy",
+            summary: ["Church leadership, elders, deacons, sound teaching, godliness."]
+        }, {
+            book: "2 Timothy",
+            summary: ["Endure hardships, Scripture’s usefulness, perseverance, courage."]
+        }, {
+            book: "Titus",
+            summary: ["Church leadership, sound teaching, good works, integrity."]
+        }, {
+            book: "Philemon",
+            summary: ["Forgiveness, reconciliation, mercy, Christian fellowship."]
+        }, {
+            book: "Hebrews",
+            summary: ["Christ superior, faith, endurance, ultimate salvation plan."]
+        }, {
+            book: "James",
+            summary: ["Practical faith, works, wisdom, patience, integrity."]
+        }, {
+            book: "1 Peter",
+            summary: ["Encouragement under persecution, holiness, perseverance, trust."]
+        }, {
+            book: "2 Peter",
+            summary: ["Warnings against false teachers, spiritual growth, discernment."]
+        }, {
+            book: "1 John",
+            summary: ["Love, obedience, fellowship, assurance of salvation."]
+        }, {
+            book: "2 John",
+            summary: ["Faithfulness, walking in truth, love, discernment."]
+        }, {
+            book: "3 John",
+            summary: ["Hospitality, support for teachers, integrity, Christian fellowship."]
+        }, {
+            book: "Jude",
+            summary: ["Warnings against ungodliness, contend for faith, persevere."]
+        }, {
+            book: "Revelation",
+            summary: ["Visions of Christ, end times, God’s victory, hope, endurance."]
+        }];
+
+        // ===============================
+        // Render content
+        // ===============================
+        function renderOldContent() {
+            const oldDiv = document.getElementById("oldContent");
+            oldDiv.innerHTML = oldTestament.map(b => `<div class="book"><h2>${b.book}</h2>${b.summary.map(p=>`<p>${p}</p>`).join('')}</div>`).join('');
+}
+function renderNewContent(){
+  const newDiv = document.getElementById("newContent");
+  newDiv.innerHTML = newTestament.map(b=>`<div class="book"><h2>${b.book}</h2>${b.summary.map(p=>`<p>${p}</p>`).join('')}</div>`).join('');
+}
+renderOldContent();
+renderNewContent();
+
+// ===============================
+// Search functionality
+// ===============================
+function setupSearch(searchInputId, contentId, booksArray){
+  const searchInput = document.getElementById(searchInputId);
+  const contentDiv = document.getElementById(contentId);
+  searchInput.addEventListener('input', e=>{
+    const q = e.target.value.toLowerCase();
+    const bookDivs = contentDiv.querySelectorAll('.book');
+    bookDivs.forEach((div,i)=>{
+      const book = booksArray[i];
+      const visible = book.book.toLowerCase().includes(q) || book.summary.some(p=>p.toLowerCase().includes(q));
+      div.style.display = visible ? 'block' : 'none';
+    });
+  });
+}
+setupSearch('searchOld','oldContent',oldTestament);
+setupSearch('searchNew','newContent',newTestament);
+
+// ===============================
+// Draggable divider
+// ===============================
+const divider = document.getElementById('divider');
+let isDragging=false;
+divider.addEventListener('mousedown',()=>{isDragging=true;document.body.style.cursor='col-resize';});
+document.addEventListener('mouseup',()=>{isDragging=false;document.body.style.cursor='default';});
+document.addEventListener('mousemove',e=>{
+  if(!isDragging) return;
+  const rect = document.getElementById('wrapper').getBoundingClientRect();
+  let percent = (e.clientX - rect.left)/rect.width*100;
+  if(percent<10) percent=10;
+  if(percent>90) percent=90;
+  document.getElementById('leftPanel').style.flex=`0 0 ${percent}%`;
+  document.getElementById('rightPanel').style.flex=`0 0 ${100-percent}%`;
+});
+
+// ===============================
+// Swap panels
+// ===============================
+const wrapperEl = document.getElementById('wrapper');
+const leftPanel = document.getElementById('leftPanel');
+const rightPanel = document.getElementById('rightPanel');
+document.getElementById('swapBtn').addEventListener('click',()=>{
+  if(wrapperEl.firstElementChild===leftPanel){
+    wrapperEl.insertBefore(rightPanel,leftPanel);
+  } else {
+    wrapperEl.insertBefore(leftPanel,rightPanel);
+  }
+});
+    </script>
+
+</body>
+
+</html>
